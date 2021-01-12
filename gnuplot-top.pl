@@ -5,6 +5,7 @@ use File::Temp 'tempfile';
 use Data::Dumper;
 use List::Util 'pairgrep';
 use utf8;
+our $VERSION = "1.00";
 use constant {
    PID => 0,
    USER => 1,
