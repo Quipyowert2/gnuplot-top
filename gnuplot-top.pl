@@ -5,7 +5,7 @@ use File::Temp 'tempfile';
 use Data::Dumper;
 use List::Util 'pairgrep';
 use utf8;
-our $VERSION = "1.00";
+our $VERSION = "1.01";
 use constant {
    PID => 0,
    USER => 1,
@@ -75,6 +75,33 @@ sub column {
       }
    }
 }
+#Validate column argument
+#Return whether column is valid
+sub checkArg {
+   my $arg = $_[0];
+   #Most of these except for COMMAND are
+   #abbreviations used by `top` for the columns
+   my %abbrev = (
+      'MEM' => 'MEMORY',
+      'PR' => 'PRIORITY',
+      'NI' => 'NICE',
+      'VIRT' => 'VIRTUAL',
+      'RES' => 'RESIDENT',
+      'SHR' => 'SHARED',
+      'S' => 'STATUS',
+      'COMMAND' => 'NAME',
+   );
+   if (defined $abbrev{$$arg}) {
+      $$arg = $abbrev{$$arg};
+      return 1;
+   }
+   foreach my $column (qw(PID USER PRIORITY NICE VIRTUAL RESIDENT SHARED STATUS CPU MEMORY TIME COMMAND)) {
+      if ($$arg eq $column) {
+         return 1;
+      }
+   }
+   return 0;
+}
 my ($top, $gnuplot);
 my $signaled = 0;
 sub main {
@@ -87,6 +114,9 @@ sub main {
    #"0 + <expr>" converts to a number
    my $wantedPid = 0 + (shift @ARGV);
    my $wantedColumn = uc(shift @ARGV);
+   if (!checkArg(\$wantedColumn)) {
+      usage();
+   }
    my ($plotFile, $plotFilename) = tempfile();
    #Open Top for reading and GNUPlot for writing
    open $top, READ_PIPE, "top";
