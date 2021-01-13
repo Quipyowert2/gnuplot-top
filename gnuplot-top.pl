@@ -5,7 +5,7 @@ use File::Temp 'tempfile';
 use Data::Dumper;
 use List::Util 'pairgrep';
 use utf8;
-our $VERSION = "1.01";
+our $VERSION = "1.02";
 use constant {
    PID => 0,
    USER => 1,
@@ -66,14 +66,6 @@ sub readPipe {
    print "Cleaned-up line is $cleaned\n";
    return $cleaned;
 =cut
-}
-sub column {
-   my $i = $_[0];
-   for my $constname (qw(PID USER PRIORITY NICE VIRTUAL RESIDENT SHARED STATUS CPU MEMORY TIME NAME)) {
-      if ($i == eval $constname) {
-         return $constname;
-      }
-   }
 }
 #Validate column argument
 #Return whether column is valid
