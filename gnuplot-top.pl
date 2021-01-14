@@ -4,8 +4,9 @@ use warnings FATAL => 'all';
 use File::Temp 'tempfile';
 use Data::Dumper;
 use List::Util 'pairgrep';
+use English qw(-no_match_vars);
 use utf8;
-our $VERSION = "1.03";
+our $VERSION = "1.04";
 use constant {
    PID => 0,
    USER => 1,
@@ -44,7 +45,7 @@ HELP
 #Pass in a backslashed variable containing a string
 #Returns the changed string.
 sub removeAnsiEscapes {
-   my ($string) = @_;
+   my ($string) = @ARG;
    #ANSI escape sequences don't use unicode codepoints (I think)
    no utf8;
    $$string =~ s/\e[\[\(].*?[[:alpha:]]//g;
@@ -53,7 +54,7 @@ sub removeAnsiEscapes {
 #Read a record from a pipe to 'top' command,
 #removing ANSI escape codes as needed.
 sub readPipe {
-   my ($top) = @_;
+   my ($top) = @ARG;
    my $line = scalar readline $top;
    return removeAnsiEscapes(\$line);
 =for comment
@@ -70,7 +71,7 @@ sub readPipe {
 #Validate column argument
 #Return whether column is valid
 sub checkArg {
-   my ($arg) = @_;
+   my ($arg) = @ARG;
    #Most of these except for COMMAND are
    #abbreviations used by `top` for the columns
    my %abbrev = (
@@ -114,18 +115,18 @@ sub main {
    open $top, READ_PIPE, "top";
    open $gnuplot, WRITE_PIPE, "gnuplot";
    #Disable buffering for *STDOUT
-   local $| = 1;
+   local $OUTPUT_AUTOFLUSH = 1;
    #Disable buffering for $gnuplot pipe.
    my $oldfh = select $gnuplot;
-   local $| = 1;
+   local $OUTPUT_AUTOFLUSH = 1;
    select $oldfh;
    $oldfh = select $plotFile;
-   local $| = 1;
+   local $OUTPUT_AUTOFLUSH = 1;
    select $oldfh;
    while (!$signaled && defined(my $line = readPipe($top))) {
       if ($line =~ m/^\s*\d+/) {
          my $i = -1;
-         my @records = grep {length($_)} split m/\s+/, $line;
+         my @records = grep {length($ARG)} split m/\s+/, $line;
          my %record;
          $record{PID} = $records[0];
          $record{USER} = $records[1];
