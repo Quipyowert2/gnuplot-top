@@ -7,7 +7,7 @@ use List::Util 'pairgrep';
 use English qw(-no_match_vars);
 use IO::Handle;
 use utf8;
-our $VERSION = "1.05";
+our $VERSION = "1.06";
 use constant {
    PID => 0,
    USER => 1,
@@ -49,7 +49,11 @@ sub removeAnsiEscapes {
    my ($string) = @ARG;
    #ANSI escape sequences don't use unicode codepoints (I think)
    no utf8;
-   $$string =~ s/\e[\[\(].*?[[:alpha:]]//g;
+   $$string =~ s/\e          #Escape character
+                 [\[\(]      #Left bracket or parenthesis
+                 .*?         #Non-greedy one or more characters
+                 [[:alpha:]] #Alphabetic character
+                 //gx;
    return $$string;
 }
 #Read a record from a pipe to 'top' command,
@@ -121,9 +125,11 @@ sub main {
    $gnuplot->autoflush();
    $plotFile->autoflush();
    while (!$signaled && defined(my $line = readPipe($top))) {
-      if ($line =~ m/^\s*\d+/) {
+      if ($line =~ m/^    #Start of line
+                      \s* #Zero or more spaces
+                      \d+ #One or more digits/x) {
          my $i = -1;
-         my @records = grep {length($ARG)} split m/\s+/, $line;
+         my @records = grep {length($ARG)} split m/\s+ #One or more spaces/x, $line;
          my %record;
          $record{PID} = $records[0];
          $record{USER} = $records[1];
