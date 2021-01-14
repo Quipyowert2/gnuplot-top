@@ -7,7 +7,7 @@ use List::Util 'pairgrep';
 use English qw(-no_match_vars);
 use IO::Handle;
 use utf8;
-our $VERSION = "1.07";
+our $VERSION = "1.08";
 use constant {
    PID => 0,
    USER => 1,
@@ -73,12 +73,12 @@ sub readPipe {
    return $cleaned;
 =cut
 }
+my @columns = qw(PID USER PRIORITY NICE VIRTUAL RESIDENT SHARED STATUS CPU MEMORY TIME COMMAND);
 #Validate column argument
 #Return whether column is valid
 sub checkArg {
    my ($arg) = @ARG;
-   #Most of these except for COMMAND are
-   #abbreviations used by `top` for the columns
+   #Abbreviations used by `top` for the columns
    my %abbrev = (
       'MEM' => 'MEMORY',
       'PR' => 'PRIORITY',
@@ -87,13 +87,12 @@ sub checkArg {
       'RES' => 'RESIDENT',
       'SHR' => 'SHARED',
       'S' => 'STATUS',
-      'COMMAND' => 'NAME',
    );
    if (defined $abbrev{$$arg}) {
       $$arg = $abbrev{$$arg};
       return 1;
    }
-   foreach my $column (qw(PID USER PRIORITY NICE VIRTUAL RESIDENT SHARED STATUS CPU MEMORY TIME COMMAND)) {
+   foreach my $column (@columns) {
       if ($$arg eq $column) {
          return 1;
       }
@@ -128,27 +127,15 @@ sub main {
       if ($line =~ m/^    #Start of line
                       \s* #Zero or more spaces
                       \d+ #One or more digits/x) {
-         my @records = grep {length($ARG)} split m/\s+ #One or more spaces/x, $line;
-         my %record;
-         $record{PID} = $records[0];
-         $record{USER} = $records[1];
-         $record{PRIORITY} = $records[2];
-         $record{NICE} = $records[3];
-         $record{VIRTUAL} = $records[4];
-         $record{RESIDENT} = $records[5];
-         $record{SHARED} = $records[6];
-         $record{STATUS} = $records[7];
-         $record{CPU} = $records[8];
-         $record{MEMORY} = $records[9];
-         $record{TIME} = $records[10];
-         $record{NAME} = $records[11];
+         my $i = 0;
+         my %record = map {$columns[$i++] => $ARG} grep {length($ARG)} split m/\s+ #One or more spaces/x, $line;
          #print Dumper \%record;
          if ($record{PID} == $wantedPid) {
-            print "Found PID $wantedPid; command was $record{NAME}\n";
+            print "Found PID $wantedPid; command was $record{COMMAND}\n";
             my $timeDiff = time()-$startTime;
             my $plotLine = "$timeDiff\t\t$record{$wantedColumn}\n";
             print $plotFile $plotLine;
-            print $gnuplot "plot '$plotFilename' with lines title '$wantedColumn of $record{NAME}'\n";
+            print $gnuplot "plot '$plotFilename' with lines title '$wantedColumn of $record{COMMAND}'\n";
          }
       }
    }
