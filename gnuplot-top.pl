@@ -8,9 +8,9 @@ use English qw(-no_match_vars);
 use IO::Handle;
 use Readonly;
 use utf8;
-our $VERSION = "1.09";
+our $VERSION = "1.10";
 sub usage {
-   print STDERR <<HELP;
+   print STDERR <<'HELP';
 gnuplot-top.pl <process-id> <column>
 where column is one of:
    pid
@@ -101,8 +101,8 @@ sub main {
    }
    my ($plotFile, $plotFilename) = tempfile();
    #Open Top for reading and GNUPlot for writing
-   open $top, "-|", "top";
-   open $gnuplot, "|-", "gnuplot";
+   open $top, q{-|}, "top";
+   open $gnuplot, q{|-}, "gnuplot";
    #Disable buffering for *STDOUT
    *STDOUT->autoflush();
    #Disable buffering for $gnuplot pipe.
