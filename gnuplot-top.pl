@@ -5,7 +5,7 @@ use File::Temp 'tempfile';
 use Data::Dumper;
 use List::Util 'pairgrep';
 use utf8;
-our $VERSION = "1.02";
+our $VERSION = "1.03";
 use constant {
    PID => 0,
    USER => 1,
@@ -44,16 +44,16 @@ HELP
 #Pass in a backslashed variable containing a string
 #Returns the changed string.
 sub removeAnsiEscapes {
+   my ($string) = @_;
    #ANSI escape sequences don't use unicode codepoints (I think)
    no utf8;
-   my $string = $_[0];
    $$string =~ s/\e[\[\(].*?[[:alpha:]]//g;
    return $$string;
 }
 #Read a record from a pipe to 'top' command,
 #removing ANSI escape codes as needed.
 sub readPipe {
-   my $top = $_[0];
+   my ($top) = @_;
    my $line = scalar readline $top;
    return removeAnsiEscapes(\$line);
 =for comment
@@ -70,7 +70,7 @@ sub readPipe {
 #Validate column argument
 #Return whether column is valid
 sub checkArg {
-   my $arg = $_[0];
+   my ($arg) = @_;
    #Most of these except for COMMAND are
    #abbreviations used by `top` for the columns
    my %abbrev = (
