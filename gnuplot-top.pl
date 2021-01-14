@@ -6,24 +6,9 @@ use Data::Dumper;
 use List::Util 'pairgrep';
 use English qw(-no_match_vars);
 use IO::Handle;
+use Readonly;
 use utf8;
-our $VERSION = "1.08";
-use constant {
-   PID => 0,
-   USER => 1,
-   PRIORITY => 2,
-   NICE => 3,
-   VIRTUAL => 4,
-   RESIDENT => 5,
-   SHARED => 6,
-   STATUS => 7,
-   CPU => 8,
-   MEMORY => 9,
-   TIME => 10,
-   NAME => 11,
-   READ_PIPE => "-|",
-   WRITE_PIPE => "|-",
-};
+our $VERSION = "1.09";
 sub usage {
    print STDERR <<HELP;
 gnuplot-top.pl <process-id> <column>
@@ -73,7 +58,7 @@ sub readPipe {
    return $cleaned;
 =cut
 }
-my @columns = qw(PID USER PRIORITY NICE VIRTUAL RESIDENT SHARED STATUS CPU MEMORY TIME COMMAND);
+Readonly my @columns => qw(PID USER PRIORITY NICE VIRTUAL RESIDENT SHARED STATUS CPU MEMORY TIME COMMAND);
 #Validate column argument
 #Return whether column is valid
 sub checkArg {
@@ -116,8 +101,8 @@ sub main {
    }
    my ($plotFile, $plotFilename) = tempfile();
    #Open Top for reading and GNUPlot for writing
-   open $top, READ_PIPE, "top";
-   open $gnuplot, WRITE_PIPE, "gnuplot";
+   open $top, "-|", "top";
+   open $gnuplot, "|-", "gnuplot";
    #Disable buffering for *STDOUT
    *STDOUT->autoflush();
    #Disable buffering for $gnuplot pipe.
