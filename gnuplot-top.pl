@@ -5,8 +5,9 @@ use File::Temp 'tempfile';
 use Data::Dumper;
 use List::Util 'pairgrep';
 use English qw(-no_match_vars);
+use IO::Handle;
 use utf8;
-our $VERSION = "1.04";
+our $VERSION = "1.05";
 use constant {
    PID => 0,
    USER => 1,
@@ -115,14 +116,10 @@ sub main {
    open $top, READ_PIPE, "top";
    open $gnuplot, WRITE_PIPE, "gnuplot";
    #Disable buffering for *STDOUT
-   local $OUTPUT_AUTOFLUSH = 1;
+   *STDOUT->autoflush();
    #Disable buffering for $gnuplot pipe.
-   my $oldfh = select $gnuplot;
-   local $OUTPUT_AUTOFLUSH = 1;
-   select $oldfh;
-   $oldfh = select $plotFile;
-   local $OUTPUT_AUTOFLUSH = 1;
-   select $oldfh;
+   $gnuplot->autoflush();
+   $plotFile->autoflush();
    while (!$signaled && defined(my $line = readPipe($top))) {
       if ($line =~ m/^\s*\d+/) {
          my $i = -1;
