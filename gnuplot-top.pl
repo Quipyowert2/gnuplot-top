@@ -8,7 +8,7 @@ use English qw(-no_match_vars);
 use IO::Handle;
 use Readonly;
 use utf8;
-our $VERSION = "1.10";
+our $VERSION = "1.11";
 sub usage {
    print STDERR <<'HELP';
 gnuplot-top.pl <process-id> <column>
@@ -113,7 +113,7 @@ sub main {
                       \s* #Zero or more spaces
                       \d+ #One or more digits/x) {
          my $i = 0;
-         my %record = map {$columns[$i++] => $ARG} grep {length($ARG)} split m/\s+ #One or more spaces/x, $line;
+         my %record = map {$columns[$i++] => $ARG} splice @{[grep {length($ARG)} split m/\s+ #One or more spaces/x, $line]}, 0, scalar @columns;
          #print Dumper \%record;
          if ($record{PID} == $wantedPid) {
             print "Found PID $wantedPid; command was $record{COMMAND}\n";
