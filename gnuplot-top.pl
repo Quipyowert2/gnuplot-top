@@ -8,7 +8,7 @@ use English qw(-no_match_vars);
 use IO::Handle;
 use Readonly;
 use utf8;
-our $VERSION = "1.11";
+our $VERSION = "1.12";
 sub usage {
    print STDERR <<'HELP';
 gnuplot-top.pl <process-id> <column>
@@ -113,14 +113,14 @@ sub main {
                       \s* #Zero or more spaces
                       \d+ #One or more digits/x) {
          my $i = 0;
-         my %record = map {$columns[$i++] => $ARG} splice @{[grep {length($ARG)} split m/\s+ #One or more spaces/x, $line]}, 0, scalar @columns;
-         #print Dumper \%record;
-         if ($record{PID} == $wantedPid) {
-            print "Found PID $wantedPid; command was $record{COMMAND}\n";
+         my %fields = map {$columns[$i++] => $ARG} splice @{[grep {length($ARG)} split m/\s+ #One or more spaces/x, $line]}, 0, scalar @columns;
+         #print Dumper \%fields;
+         if ($fields{PID} == $wantedPid) {
+            print "Found PID $wantedPid; command was $fields{COMMAND}\n";
             my $timeDiff = time()-$startTime;
-            my $plotLine = "$timeDiff\t\t$record{$wantedColumn}\n";
+            my $plotLine = "$timeDiff\t\t$fields{$wantedColumn}\n";
             print $plotFile $plotLine;
-            print $gnuplot "plot '$plotFilename' with lines title '$wantedColumn of $record{COMMAND}'\n";
+            print $gnuplot "plot '$plotFilename' with lines title '$wantedColumn of $fields{COMMAND}'\n";
          }
       }
    }
