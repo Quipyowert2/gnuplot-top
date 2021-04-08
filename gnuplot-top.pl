@@ -8,7 +8,7 @@ use English qw(-no_match_vars);
 use IO::Handle;
 use Readonly;
 use utf8;
-our $VERSION = "1.12";
+our $VERSION = "1.13";
 sub usage {
    print STDERR <<'HELP';
 gnuplot-top.pl <process-id> <column>
@@ -25,6 +25,7 @@ where column is one of:
    mem
    time
    command
+Multiple columns can be specified.
 HELP
    exit 1;
 }
@@ -95,8 +96,15 @@ sub main {
    my $startTime = time();
    #"0 + <expr>" converts to a number
    my $wantedPid = 0 + (shift @ARGV);
-   my $wantedColumn = uc(shift @ARGV);
-   if (!checkArg(\$wantedColumn)) {
+   my @wantedColumns;
+   while (@ARGV) {
+      my $wantedColumn = uc(shift @ARGV);
+      if (!checkArg(\$wantedColumn)) {
+         usage();
+      }
+      push @wantedColumns, $wantedColumn;
+   }
+   unless (scalar @wantedColumns) {
       usage();
    }
    my ($plotFile, $plotFilename) = tempfile();
@@ -118,9 +126,16 @@ sub main {
          if ($fields{PID} == $wantedPid) {
             print "Found PID $wantedPid; command was $fields{COMMAND}\n";
             my $timeDiff = time()-$startTime;
-            my $plotLine = "$timeDiff\t\t$fields{$wantedColumn}\n";
-            print $plotFile $plotLine;
-            print $gnuplot "plot '$plotFilename' with lines title '$wantedColumn of $fields{COMMAND}'\n";
+            my $plotLine = $timeDiff;
+            my $plotCmd = "plot ";
+            my $j = 2;
+            foreach my $wantedColumn (@wantedColumns) {
+               $plotLine .= "\t\t$fields{$wantedColumn}";
+               $plotCmd .= "'$plotFilename' using 1:$j with lines title '$wantedColumn of $fields{COMMAND}',";
+               $j++;
+            }
+            print $plotFile "$plotLine\n";
+            print $gnuplot "$plotCmd\n";
          }
       }
    }
